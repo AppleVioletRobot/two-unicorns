@@ -119,6 +119,70 @@ async function addTraversalPlane(scene, def, roomConfig, materials, colliders) {
   block('top', x, def.apertureHeight + topHeight / 2, def.apertureWidth, topHeight, false);
 }
 
+function gallerySlotsForPlane(def, roomWidth, gallery) {
+  const apertureX = apertureCentreX(def, roomWidth);
+  const apertureLeft = apertureX - def.apertureWidth / 2;
+  const apertureRight = apertureX + def.apertureWidth / 2;
+  const segments = [
+    [-roomWidth / 2, apertureLeft],
+    [apertureRight, roomWidth / 2]
+  ];
+  const itemWidth = gallery.itemWidth ?? 0.56;
+  const gap = gallery.gap ?? 0.12;
+  const slots = [];
+
+  for (const [start, end] of segments) {
+    const width = end - start;
+    const count = Math.max(0, Math.floor((width + gap) / (itemWidth + gap)));
+    if (!count) continue;
+    const used = count * itemWidth + (count - 1) * gap;
+    const first = start + (width - used) / 2 + itemWidth / 2;
+    for (let index = 0; index < count; index += 1) slots.push(first + index * (itemWidth + gap));
+  }
+  return slots;
+}
+
+async function addPlaneGallery(scene, gallery, roomConfig) {
+  if (gallery.enabled === false) return;
+  const planeById = new Map((roomConfig.planes ?? []).map((plane) => [plane.id, plane]));
+  const planeIds = gallery.planes ?? [...planeById.keys()];
+  const images = gallery.images ?? [];
+  const itemWidth = gallery.itemWidth ?? 0.56;
+  const [aspectWidth, aspectHeight] = gallery.aspectRatio ?? [472, 536];
+  const itemHeight = gallery.itemHeight ?? itemWidth * (aspectHeight / aspectWidth);
+  const centreY = gallery.centreY ?? 1.65;
+  const normalOffset = gallery.normalOffset ?? 0.012;
+  const sides = gallery.sides ?? ['front', 'back'];
+  let imageIndex = 0;
+
+  for (const planeId of planeIds) {
+    const def = planeById.get(planeId);
+    if (!def) continue;
+    const xSlots = gallerySlotsForPlane(def, roomConfig.dimensions.width, gallery);
+    const halfThickness = (def.thickness ?? 0.24) / 2;
+
+    for (const side of sides) {
+      for (const x of xSlots) {
+        if (imageIndex >= images.length) return;
+        const texture = await textureLoader.loadAsync(images[imageIndex]);
+        texture.colorSpace = THREE.SRGBColorSpace;
+        const material = new THREE.MeshBasicMaterial({
+          map: texture,
+          transparent: true,
+          alphaTest: 0.001,
+          side: THREE.FrontSide
+        });
+        const mesh = new THREE.Mesh(new THREE.PlaneGeometry(itemWidth, itemHeight), material);
+        mesh.name = `${gallery.id ?? 'plane-gallery'}-${imageIndex + 1}`;
+        mesh.position.set(x, centreY, def.z + (side === 'front' ? halfThickness + normalOffset : -halfThickness - normalOffset));
+        mesh.rotation.y = side === 'front' ? 0 : Math.PI;
+        scene.add(mesh);
+        imageIndex += 1;
+      }
+    }
+  }
+}
+
 function addLight(scene, lightConfig) {
   let light;
   if (lightConfig.type === 'ambient') light = new THREE.AmbientLight(lightConfig.color, lightConfig.intensity);
@@ -140,5 +204,6 @@ export async function buildRoom(scene, roomConfig, skinConfig, contentConfig) {
   skinConfig.lighting.forEach((light) => addLight(scene, light));
   for (const object of contentConfig.objects ?? []) await addConfiguredItem(scene, object, materials);
   for (const sign of contentConfig.signs ?? []) addTextSign(scene, sign);
+  for (const gallery of contentConfig.planeGalleries ?? []) await addPlaneGallery(scene, gallery, roomConfig);
   return { width, depth, height, planeColliders };
 }
