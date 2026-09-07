@@ -20,11 +20,43 @@ function wrapText(ctx, text, maxWidth) {
 function interpretationTexture(panel) {
   const canvas = document.createElement('canvas');
   canvas.width = panel.canvasWidth ?? 1600;
-  canvas.height = panel.canvasHeight ?? 1200;
   const ctx = canvas.getContext('2d');
   const background = panel.backgroundColor ?? '#ffffff';
   const textColor = panel.textColor ?? '#111111';
   const padding = panel.padding ?? 120;
+  const contentWidth = canvas.width - padding * 2;
+  const fontFamily = panel.fontFamily ?? 'Helvetica Neue, Helvetica, Arial, sans-serif';
+  const headingSize = panel.headingSize ?? 88;
+  const bodySize = panel.bodySize ?? 38;
+  const lineHeight = panel.lineHeight ?? 1.45;
+
+  let requiredHeight = padding;
+  let eyebrowLines = [];
+  let headingLines = [];
+  let bodyLines = [];
+
+  if (panel.eyebrow) {
+    const eyebrowSize = panel.eyebrowSize ?? 38;
+    ctx.font = `500 ${eyebrowSize}px ${fontFamily}`;
+    eyebrowLines = [panel.eyebrow.toUpperCase()];
+    requiredHeight += eyebrowSize * 1.8;
+  }
+
+  ctx.font = `600 ${headingSize}px ${fontFamily}`;
+  headingLines = wrapText(ctx, panel.heading ?? '', contentWidth);
+  requiredHeight += headingLines.length * headingSize * 1.05;
+
+  if (panel.body) {
+    requiredHeight += 48;
+    ctx.font = `400 ${bodySize}px ${fontFamily}`;
+    bodyLines = wrapText(ctx, panel.body, contentWidth);
+    requiredHeight += bodyLines.length * bodySize * lineHeight;
+  }
+
+  requiredHeight += padding;
+  canvas.height = panel.autoHeight === false
+    ? (panel.canvasHeight ?? 1200)
+    : Math.ceil(Math.max(panel.canvasHeight ?? 0, requiredHeight));
 
   ctx.fillStyle = background;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -39,43 +71,41 @@ function interpretationTexture(panel) {
   ctx.fillStyle = textColor;
   ctx.textBaseline = 'top';
   let y = padding;
-  const contentWidth = canvas.width - padding * 2;
-  const fontFamily = panel.fontFamily ?? 'Helvetica Neue, Helvetica, Arial, sans-serif';
 
-  if (panel.eyebrow) {
+  if (eyebrowLines.length) {
     const eyebrowSize = panel.eyebrowSize ?? 38;
     ctx.font = `500 ${eyebrowSize}px ${fontFamily}`;
-    ctx.fillText(panel.eyebrow.toUpperCase(), padding, y);
+    ctx.fillText(eyebrowLines[0], padding, y);
     y += eyebrowSize * 1.8;
   }
 
-  const headingSize = panel.headingSize ?? 88;
   ctx.font = `600 ${headingSize}px ${fontFamily}`;
-  for (const line of wrapText(ctx, panel.heading ?? '', contentWidth)) {
+  for (const line of headingLines) {
     ctx.fillText(line, padding, y);
     y += headingSize * 1.05;
   }
 
-  if (panel.body) {
+  if (bodyLines.length) {
     y += 48;
-    const bodySize = panel.bodySize ?? 38;
     ctx.font = `400 ${bodySize}px ${fontFamily}`;
-    for (const line of wrapText(ctx, panel.body, contentWidth)) {
+    for (const line of bodyLines) {
       ctx.fillText(line, padding, y);
-      y += bodySize * (panel.lineHeight ?? 1.45);
+      y += bodySize * lineHeight;
     }
   }
 
   const texture = new THREE.CanvasTexture(canvas);
   texture.colorSpace = THREE.SRGBColorSpace;
-  return texture;
+  return { texture, aspectRatio: canvas.height / canvas.width };
 }
 
 function addInterpretationPanel(scene, panel) {
   if (panel.enabled === false) return;
-  const texture = interpretationTexture(panel);
+  const { texture, aspectRatio } = interpretationTexture(panel);
   const material = new THREE.MeshBasicMaterial({ map: texture, side: THREE.FrontSide });
-  const mesh = new THREE.Mesh(new THREE.PlaneGeometry(...panel.size), material);
+  const width = panel.size[0];
+  const height = panel.autoHeight === false ? panel.size[1] : width * aspectRatio;
+  const mesh = new THREE.Mesh(new THREE.PlaneGeometry(width, height), material);
   mesh.name = panel.id;
   mesh.position.set(...panel.position);
   mesh.rotation.set(...(panel.rotation ?? [0, 0, 0]));
