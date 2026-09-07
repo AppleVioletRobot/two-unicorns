@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 
 function wrapText(ctx, text, maxWidth) {
-  const words = text.split(/\s+/);
+  const words = text.trim().split(/\s+/);
   const lines = [];
   let line = '';
   for (const word of words) {
@@ -17,6 +17,13 @@ function wrapText(ctx, text, maxWidth) {
   return lines;
 }
 
+function wrapParagraphs(ctx, text, maxWidth) {
+  return text
+    .split(/\n\s*\n/)
+    .map((paragraph) => wrapText(ctx, paragraph, maxWidth))
+    .filter((lines) => lines.length);
+}
+
 function interpretationTexture(panel) {
   const canvas = document.createElement('canvas');
   canvas.width = panel.canvasWidth ?? 1600;
@@ -29,11 +36,12 @@ function interpretationTexture(panel) {
   const headingSize = panel.headingSize ?? 88;
   const bodySize = panel.bodySize ?? 38;
   const lineHeight = panel.lineHeight ?? 1.45;
+  const paragraphGap = panel.paragraphGap ?? bodySize * 0.9;
 
   let requiredHeight = padding;
   let eyebrowLines = [];
   let headingLines = [];
-  let bodyLines = [];
+  let bodyParagraphs = [];
 
   if (panel.eyebrow) {
     const eyebrowSize = panel.eyebrowSize ?? 38;
@@ -49,8 +57,11 @@ function interpretationTexture(panel) {
   if (panel.body) {
     requiredHeight += 48;
     ctx.font = `400 ${bodySize}px ${fontFamily}`;
-    bodyLines = wrapText(ctx, panel.body, contentWidth);
-    requiredHeight += bodyLines.length * bodySize * lineHeight;
+    bodyParagraphs = wrapParagraphs(ctx, panel.body, contentWidth);
+    bodyParagraphs.forEach((lines, index) => {
+      requiredHeight += lines.length * bodySize * lineHeight;
+      if (index < bodyParagraphs.length - 1) requiredHeight += paragraphGap;
+    });
   }
 
   requiredHeight += padding;
@@ -85,13 +96,16 @@ function interpretationTexture(panel) {
     y += headingSize * 1.05;
   }
 
-  if (bodyLines.length) {
+  if (bodyParagraphs.length) {
     y += 48;
     ctx.font = `400 ${bodySize}px ${fontFamily}`;
-    for (const line of bodyLines) {
-      ctx.fillText(line, padding, y);
-      y += bodySize * lineHeight;
-    }
+    bodyParagraphs.forEach((lines, index) => {
+      for (const line of lines) {
+        ctx.fillText(line, padding, y);
+        y += bodySize * lineHeight;
+      }
+      if (index < bodyParagraphs.length - 1) y += paragraphGap;
+    });
   }
 
   const texture = new THREE.CanvasTexture(canvas);
