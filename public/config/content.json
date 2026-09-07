@@ -1,3 +1,15 @@
 {
-  "objects": []
+  "objects": [],
+  "signs": [
+    {
+      "id": "exit-sign",
+      "text": "EXIT",
+      "size": [0.82, 0.31],
+      "position": [0, 2.62, 5.875],
+      "rotation": [0, 3.1415926536, 0],
+      "backgroundColor": "#16834a",
+      "textColor": "#ffffff",
+      "fontSize": 190
+    }
+  ]
 }
