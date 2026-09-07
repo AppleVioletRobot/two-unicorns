@@ -9,6 +9,32 @@ async function loadJson(path) {
   return response.json();
 }
 
+function shuffled(items) {
+  const copy = [...items];
+  for (let i = copy.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+  return copy;
+}
+
+function randomiseGalleryImages(contentConfig) {
+  const galleries = [
+    ...(contentConfig.planeGalleries ?? []),
+    ...(contentConfig.wallGalleries ?? [])
+  ];
+  const allImages = galleries.flatMap((gallery) => gallery.images ?? []);
+  if (!allImages.length) return;
+
+  const shuffledImages = shuffled(allImages);
+  let cursor = 0;
+  for (const gallery of galleries) {
+    const count = (gallery.images ?? []).length;
+    gallery.images = shuffledImages.slice(cursor, cursor + count);
+    cursor += count;
+  }
+}
+
 async function start() {
   const overlay = document.querySelector('#overlay');
   const enterButton = document.querySelector('#enter-button');
@@ -20,6 +46,8 @@ async function start() {
     loadJson('./config/skin.json'),
     loadJson('./config/content.json')
   ]);
+
+  randomiseGalleryImages(contentConfig);
 
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(
@@ -59,5 +87,5 @@ async function start() {
 
 start().catch((error) => {
   console.error(error);
-  document.querySelector('.overlay-card').innerHTML = `<h1>Two Unicorns Talking could not start</h1><p>${error?.message ?? String(error)}</p>`;
+  document.querySelector('.overlay-card').innerHTML = `<h1>Two Unicorns could not start</h1><p>${error?.message ?? String(error)}</p>`;
 });
