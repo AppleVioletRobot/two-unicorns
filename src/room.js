@@ -1,19 +1,39 @@
 import * as THREE from 'three';
 
+const textureLoader = new THREE.TextureLoader();
+
 function geometryForItem(item) {
   if (item.type === 'box') return new THREE.BoxGeometry(...item.size);
   if (item.type === 'plane') return new THREE.PlaneGeometry(...item.size);
   throw new Error(`Unknown geometry type: ${item.type}`);
 }
 
+async function loadMaterial(materialConfig, options = {}) {
+  let map = null;
+  if (materialConfig.texture) {
+    map = await textureLoader.loadAsync(materialConfig.texture);
+    map.wrapS = THREE.RepeatWrapping;
+    map.wrapT = THREE.RepeatWrapping;
+    if (materialConfig.textureRepeat) map.repeat.set(...materialConfig.textureRepeat);
+    if (materialConfig.textureRotation) {
+      map.center.set(0.5, 0.5);
+      map.rotation = materialConfig.textureRotation;
+    }
+    map.colorSpace = THREE.SRGBColorSpace;
+  }
+
+  return new THREE.MeshStandardMaterial({
+    color: materialConfig.baseColor,
+    map,
+    side: options.doubleSided ? THREE.DoubleSide : THREE.FrontSide
+  });
+}
+
 async function addConfiguredItem(scene, item, materials) {
   if (item.enabled === false) return;
   const materialConfig = materials[item.material];
   if (!materialConfig) throw new Error(`Unknown material: ${item.material}`);
-  const material = new THREE.MeshStandardMaterial({
-    color: materialConfig.baseColor,
-    side: item.doubleSided ? THREE.DoubleSide : THREE.FrontSide
-  });
+  const material = await loadMaterial(materialConfig, { doubleSided: item.doubleSided });
   const mesh = new THREE.Mesh(geometryForItem(item), material);
   mesh.name = item.id;
   mesh.position.set(...item.position);
@@ -28,13 +48,13 @@ function apertureCentreX(def, roomWidth) {
   return 0;
 }
 
-function makeMaterial(materials, id) {
+async function makeMaterial(materials, id) {
   const config = materials[id];
   if (!config) throw new Error(`Unknown material: ${id}`);
-  return new THREE.MeshStandardMaterial({ color: config.baseColor });
+  return loadMaterial(config);
 }
 
-function addTraversalPlane(scene, def, roomConfig, materials, colliders) {
+async function addTraversalPlane(scene, def, roomConfig, materials, colliders) {
   const width = roomConfig.dimensions.width;
   const height = roomConfig.dimensions.height;
   const thickness = def.thickness ?? 0.24;
@@ -46,8 +66,8 @@ function addTraversalPlane(scene, def, roomConfig, materials, colliders) {
   const leftWidth = apertureLeft - leftEdge;
   const rightWidth = rightEdge - apertureRight;
   const topHeight = height - def.apertureHeight;
-  const faceMaterial = makeMaterial(materials, def.faceMaterial ?? def.material);
-  const edgeMaterial = makeMaterial(materials, def.edgeMaterial ?? def.faceMaterial ?? def.material);
+  const faceMaterial = await makeMaterial(materials, def.faceMaterial ?? def.material);
+  const edgeMaterial = await makeMaterial(materials, def.edgeMaterial ?? def.faceMaterial ?? def.material);
   const boxMaterials = [edgeMaterial, edgeMaterial, edgeMaterial, edgeMaterial, faceMaterial, faceMaterial];
 
   function block(id, blockX, blockY, blockWidth, blockHeight) {
@@ -87,7 +107,7 @@ export async function buildRoom(scene, roomConfig, skinConfig, contentConfig) {
   const planeColliders = [];
   scene.background = new THREE.Color(skinConfig.background);
   for (const item of architecture) await addConfiguredItem(scene, item, materials);
-  for (const plane of roomConfig.planes ?? []) addTraversalPlane(scene, plane, roomConfig, materials, planeColliders);
+  for (const plane of roomConfig.planes ?? []) await addTraversalPlane(scene, plane, roomConfig, materials, planeColliders);
   skinConfig.lighting.forEach((light) => addLight(scene, light));
   for (const object of contentConfig.objects ?? []) await addConfiguredItem(scene, object, materials);
   return { width, depth, height, planeColliders };
