@@ -2,7 +2,7 @@
   "background":"#ececec",
   "materials": {
     "walls":{"baseColor":"#913142"},
-    "floor":{"baseColor":"#d8c7ac"},
+    "floor":{"baseColor":"#ffffff","texture":"https://raw.githubusercontent.com/AppleVioletRobot/blank-room/main/public/images/floor_wood_01.webp","textureRepeat":[4,7.2],"textureRotation":0},
     "ceiling":{"baseColor":"#f7f7f4"},
     "plane_face":{"baseColor":"#efefef"},
     "plane_edge":{"baseColor":"#c8c8c8"},
