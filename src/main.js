@@ -4,7 +4,9 @@ import { buildRoom } from './room.js';
 import { createControls } from './controls.js';
 
 async function loadJson(path) {
-  const response = await fetch(path);
+  const separator = path.includes('?') ? '&' : '?';
+  const freshPath = `${path}${separator}v=${Date.now()}`;
+  const response = await fetch(freshPath, { cache: 'no-store' });
   if (!response.ok) throw new Error(`Could not load ${path}`);
   return response.json();
 }
