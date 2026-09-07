@@ -31,6 +31,7 @@ function apertureCentreX(def, roomWidth) {
 function addTraversalPlane(scene, def, roomConfig, materials, colliders) {
   const width = roomConfig.dimensions.width;
   const height = roomConfig.dimensions.height;
+  const thickness = def.thickness ?? 0.14;
   const x = apertureCentreX(def, width);
   const leftEdge = -width / 2;
   const rightEdge = width / 2;
@@ -40,27 +41,26 @@ function addTraversalPlane(scene, def, roomConfig, materials, colliders) {
   const rightWidth = rightEdge - apertureRight;
   const topHeight = height - def.apertureHeight;
   const materialConfig = materials[def.material];
-  const material = new THREE.MeshStandardMaterial({ color: materialConfig.baseColor, side: THREE.DoubleSide });
+  const material = new THREE.MeshStandardMaterial({ color: materialConfig.baseColor });
 
-  function panel(id, panelX, panelY, panelWidth, panelHeight) {
-    if (panelWidth <= 0 || panelHeight <= 0) return;
-    const mesh = new THREE.Mesh(new THREE.PlaneGeometry(panelWidth, panelHeight), material);
+  function block(id, blockX, blockY, blockWidth, blockHeight) {
+    if (blockWidth <= 0 || blockHeight <= 0) return;
+    const mesh = new THREE.Mesh(new THREE.BoxGeometry(blockWidth, blockHeight, thickness), material);
     mesh.name = `${def.id}-${id}`;
-    mesh.position.set(panelX, panelY, def.z);
+    mesh.position.set(blockX, blockY, def.z);
     scene.add(mesh);
+    colliders.push({
+      id: `${def.id}-${id}`,
+      minX: blockX - blockWidth / 2,
+      maxX: blockX + blockWidth / 2,
+      minZ: def.z - thickness / 2,
+      maxZ: def.z + thickness / 2
+    });
   }
 
-  panel('left', leftEdge + leftWidth / 2, height / 2, leftWidth, height);
-  panel('right', apertureRight + rightWidth / 2, height / 2, rightWidth, height);
-  panel('top', x, def.apertureHeight + topHeight / 2, def.apertureWidth, topHeight);
-
-  colliders.push({
-    id: def.id,
-    z: def.z,
-    apertureLeft,
-    apertureRight,
-    thickness: 0.12
-  });
+  block('left', leftEdge + leftWidth / 2, height / 2, leftWidth, height);
+  block('right', apertureRight + rightWidth / 2, height / 2, rightWidth, height);
+  block('top', x, def.apertureHeight + topHeight / 2, def.apertureWidth, topHeight);
 }
 
 function addLight(scene, lightConfig) {
