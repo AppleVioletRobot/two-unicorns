@@ -16,14 +16,14 @@ export function createControls(camera, roomBounds, playerConfig) {
 
   window.addEventListener('keyup', (event) => keys.delete(event.code));
 
-  function blockedByPlane(fromX, fromZ, toX, toZ) {
-    for (const plane of roomBounds.planeColliders ?? []) {
-      const crossed = (fromZ - plane.z) * (toZ - plane.z) <= 0 && Math.abs(toZ - fromZ) > 0.0001;
-      if (!crossed) continue;
-      const t = (plane.z - fromZ) / (toZ - fromZ);
-      if (t < 0 || t > 1) continue;
-      const crossingX = fromX + (toX - fromX) * t;
-      if (crossingX < plane.apertureLeft + margin || crossingX > plane.apertureRight - margin) return true;
+  function blockedByPlane(x, z) {
+    for (const block of roomBounds.planeColliders ?? []) {
+      if (
+        x > block.minX - margin &&
+        x < block.maxX + margin &&
+        z > block.minZ - margin &&
+        z < block.maxZ + margin
+      ) return true;
     }
     return false;
   }
@@ -45,10 +45,11 @@ export function createControls(camera, roomBounds, playerConfig) {
       const nextZ = camera.position.z - Math.cos(camera.rotation.y) * distance;
       const boundedX = Math.max(-roomBounds.width / 2 + margin, Math.min(roomBounds.width / 2 - margin, nextX));
       const boundedZ = Math.max(-roomBounds.depth / 2 + margin, Math.min(roomBounds.depth / 2 - margin, nextZ));
-      if (!blockedByPlane(camera.position.x, camera.position.z, boundedX, boundedZ)) {
-        camera.position.x = boundedX;
-        camera.position.z = boundedZ;
-      }
+
+      // Resolve each axis independently so the player can slide along a wall
+      // toward its aperture instead of becoming pinned against the collider.
+      if (!blockedByPlane(boundedX, camera.position.z)) camera.position.x = boundedX;
+      if (!blockedByPlane(camera.position.x, boundedZ)) camera.position.z = boundedZ;
     }
   }
 
