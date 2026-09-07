@@ -10,6 +10,16 @@
       "backgroundColor": "#16834a",
       "textColor": "#ffffff",
       "fontSize": 190
+    },
+    {
+      "id": "explore-instruction",
+      "text": "Turn around and explore",
+      "size": [1.05, 0.28],
+      "position": [0, 1.55, 5.925],
+      "rotation": [0, 3.1415926536, 0],
+      "backgroundColor": "#f2f0e9",
+      "textColor": "#222222",
+      "fontSize": 82
     }
   ],
   "planeGalleries": [
