@@ -1,8 +1,11 @@
+import * as THREE from 'three';
+
 export function createControls(camera, roomBounds, playerConfig) {
   const keys = new Set();
   const speed = playerConfig.speed;
   const turnSpeed = playerConfig.turnSpeed;
   const margin = playerConfig.collisionMargin;
+  const forwardVector = new THREE.Vector3();
 
   window.addEventListener('keydown', (event) => {
     if ([
@@ -40,9 +43,13 @@ export function createControls(camera, roomBounds, playerConfig) {
     camera.rotation.y += turn * turnSpeed * delta;
 
     if (forward !== 0) {
+      camera.getWorldDirection(forwardVector);
+      forwardVector.y = 0;
+      forwardVector.normalize();
+
       const distance = forward * speed * delta;
-      const nextX = camera.position.x - Math.sin(camera.rotation.y) * distance;
-      const nextZ = camera.position.z - Math.cos(camera.rotation.y) * distance;
+      const nextX = camera.position.x + forwardVector.x * distance;
+      const nextZ = camera.position.z + forwardVector.z * distance;
       const boundedX = Math.max(-roomBounds.width / 2 + margin, Math.min(roomBounds.width / 2 - margin, nextX));
       const boundedZ = Math.max(-roomBounds.depth / 2 + margin, Math.min(roomBounds.depth / 2 - margin, nextZ));
 
