@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import './style.css';
-import { ROOM, PLANES, STOPS } from './planes.js';
+import { ROOM, PLANES } from './planes.js';
 
 const mount = document.querySelector('#scene');
 const positionLabel = document.querySelector('#positionLabel');
@@ -12,7 +12,7 @@ const scene = new THREE.Scene();
 scene.background = new THREE.Color(0xd8d8d8);
 
 const camera = new THREE.PerspectiveCamera(52, window.innerWidth / window.innerHeight, 0.1, 100);
-camera.position.set(0, ROOM.eyeHeight, STOPS[0].z);
+camera.position.set(0, ROOM.eyeHeight, ROOM.startZ);
 camera.lookAt(0, ROOM.eyeHeight, 0);
 
 const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -22,12 +22,13 @@ mount.appendChild(renderer.domElement);
 
 scene.add(new THREE.HemisphereLight(0xffffff, 0x666666, 2.2));
 
+const floorLength = ROOM.startZ - ROOM.endZ + 4;
 const floor = new THREE.Mesh(
-  new THREE.PlaneGeometry(ROOM.width, 24),
+  new THREE.PlaneGeometry(ROOM.width, floorLength),
   new THREE.MeshStandardMaterial({ color: 0xf3f3f3, side: THREE.DoubleSide })
 );
 floor.rotation.x = -Math.PI / 2;
-floor.position.set(0, 0, -1);
+floor.position.set(0, 0, (ROOM.startZ + ROOM.endZ) / 2);
 scene.add(floor);
 
 function makeLabelTexture(text) {
@@ -40,10 +41,10 @@ function makeLabelTexture(text) {
   ctx.fillStyle = '#222';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.font = 'bold 92px Arial';
+  ctx.font = 'bold 76px Arial';
   ctx.fillText(text, canvas.width / 2, 120);
-  ctx.font = '42px Arial';
-  ctx.fillText('walk through the hole', canvas.width / 2, 210);
+  ctx.font = '38px Arial';
+  ctx.fillText('find your way through', canvas.width / 2, 210);
   ctx.strokeStyle = '#777';
   ctx.lineWidth = 8;
   ctx.strokeRect(40, 40, canvas.width - 80, canvas.height - 80);
@@ -53,21 +54,38 @@ function makeLabelTexture(text) {
 }
 
 function addPanel(x, y, z, w, h, material) {
+  if (w <= 0 || h <= 0) return;
   const mesh = new THREE.Mesh(new THREE.PlaneGeometry(w, h), material);
   mesh.position.set(x, y, z);
   scene.add(mesh);
 }
 
+function apertureCenterX(def) {
+  const edgeInset = 0.45;
+  if (def.aperturePosition === 'left') {
+    return -def.width / 2 + edgeInset + def.apertureWidth / 2;
+  }
+  if (def.aperturePosition === 'right') {
+    return def.width / 2 - edgeInset - def.apertureWidth / 2;
+  }
+  return 0;
+}
+
 function addPlane(def) {
-  const sideWidth = (def.width - def.apertureWidth) / 2;
+  const apertureX = apertureCenterX(def);
+  const planeLeft = -def.width / 2;
+  const planeRight = def.width / 2;
+  const apertureLeft = apertureX - def.apertureWidth / 2;
+  const apertureRight = apertureX + def.apertureWidth / 2;
+  const leftWidth = apertureLeft - planeLeft;
+  const rightWidth = planeRight - apertureRight;
   const topHeight = def.height - def.apertureHeight;
   const yMid = def.height / 2;
-  const apertureBottom = 0;
   const material = new THREE.MeshBasicMaterial({ map: makeLabelTexture(def.label), side: THREE.DoubleSide });
 
-  addPanel(-(def.apertureWidth / 2 + sideWidth / 2), yMid, def.z, sideWidth, def.height, material);
-  addPanel( (def.apertureWidth / 2 + sideWidth / 2), yMid, def.z, sideWidth, def.height, material);
-  addPanel(0, apertureBottom + def.apertureHeight + topHeight / 2, def.z, def.apertureWidth, topHeight, material);
+  addPanel(planeLeft + leftWidth / 2, yMid, def.z, leftWidth, def.height, material);
+  addPanel(apertureRight + rightWidth / 2, yMid, def.z, rightWidth, def.height, material);
+  addPanel(apertureX, def.apertureHeight + topHeight / 2, def.z, def.apertureWidth, topHeight, material);
 
   const outline = new THREE.LineSegments(
     new THREE.EdgesGeometry(new THREE.PlaneGeometry(def.width, def.height)),
@@ -91,7 +109,7 @@ wallCanvas.width = 1024;
 wallCanvas.height = 512;
 const wallCtx = wallCanvas.getContext('2d');
 wallCtx.fillStyle = '#bdbdbd';
-wallCtx.fillRect(0,0,1024,512);
+wallCtx.fillRect(0, 0, 1024, 512);
 wallCtx.fillStyle = '#111';
 wallCtx.textAlign = 'center';
 wallCtx.textBaseline = 'middle';
@@ -102,70 +120,34 @@ wallCtx.fillText('Now look back through what you crossed.', 512, 310);
 turnaroundWall.material.map = new THREE.CanvasTexture(wallCanvas);
 turnaroundWall.material.needsUpdate = true;
 
-let stopIndex = 0;
-let facing = -1; // -1 looks deeper into the tunnel, +1 looks back toward entrance
-let moving = false;
+let facing = -1;
 
 function updateUI() {
-  positionLabel.textContent = `${STOPS[stopIndex].label} · ${facing === -1 ? 'facing in' : 'facing out'}`;
-  backButton.disabled = moving || stopIndex === 0;
-  forwardButton.disabled = moving || stopIndex === STOPS.length - 1;
-  turnButton.disabled = moving;
+  const metresIn = ROOM.startZ - camera.position.z;
+  positionLabel.textContent = `${metresIn.toFixed(1)} m from start · ${facing === -1 ? 'facing in' : 'facing out'}`;
+  backButton.disabled = camera.position.z >= ROOM.startZ - 0.01;
+  forwardButton.disabled = camera.position.z <= ROOM.endZ + 1.5;
 }
 
-function targetQuaternion() {
-  const target = new THREE.Vector3(0, ROOM.eyeHeight, camera.position.z + facing * 5);
-  const m = new THREE.Matrix4().lookAt(camera.position, target, camera.up);
-  return new THREE.Quaternion().setFromRotationMatrix(m);
-}
-
-function animateTo(nextIndex) {
-  if (moving || nextIndex < 0 || nextIndex >= STOPS.length) return;
-  moving = true;
+function move(delta) {
+  const nextZ = THREE.MathUtils.clamp(
+    camera.position.z + delta,
+    ROOM.endZ + 1.5,
+    ROOM.startZ
+  );
+  camera.position.z = nextZ;
   updateUI();
-  const startZ = camera.position.z;
-  const endZ = STOPS[nextIndex].z;
-  const start = performance.now();
-  const duration = 700;
-
-  function step(now) {
-    const t = Math.min((now - start) / duration, 1);
-    const eased = 1 - Math.pow(1 - t, 3);
-    camera.position.z = THREE.MathUtils.lerp(startZ, endZ, eased);
-    if (t < 1) requestAnimationFrame(step);
-    else {
-      stopIndex = nextIndex;
-      moving = false;
-      updateUI();
-    }
-  }
-  requestAnimationFrame(step);
 }
 
 function turnAround() {
-  if (moving) return;
-  moving = true;
-  updateUI();
-  const from = camera.quaternion.clone();
   facing *= -1;
-  const to = targetQuaternion();
-  const start = performance.now();
-  const duration = 600;
-
-  function step(now) {
-    const t = Math.min((now - start) / duration, 1);
-    camera.quaternion.slerpQuaternions(from, to, 1 - Math.pow(1 - t, 3));
-    if (t < 1) requestAnimationFrame(step);
-    else {
-      moving = false;
-      updateUI();
-    }
-  }
-  requestAnimationFrame(step);
+  camera.rotation.y += Math.PI;
+  updateUI();
 }
 
-backButton.addEventListener('click', () => animateTo(stopIndex - 1));
-forwardButton.addEventListener('click', () => animateTo(stopIndex + 1));
+// Movement is deliberately incremental and instantaneous: no giant leaps and no motion-sickness tweening.
+backButton.addEventListener('click', () => move(ROOM.stepSize));
+forwardButton.addEventListener('click', () => move(-ROOM.stepSize));
 turnButton.addEventListener('click', turnAround);
 
 window.addEventListener('resize', () => {
