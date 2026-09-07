@@ -3,8 +3,8 @@
   "materials": {
     "walls":{"baseColor":"#913142"},
     "floor":{"baseColor":"#ffffff","texture":"https://raw.githubusercontent.com/AppleVioletRobot/blank-room/main/public/images/floor_wood_01.webp","textureRepeat":[4,7.2],"textureRotation":0},
-    "ceiling":{"baseColor":"#f7f7f4"},
-    "plane_face":{"baseColor":"#fff1cf"},
+    "ceiling":{"baseColor":"#f7f7f4","emissiveColor":"#f7f7f4","emissiveIntensity":0.18},
+    "plane_face":{"baseColor":"#fff1cf","emissiveColor":"#fff1cf","emissiveIntensity":0.22},
     "plane_edge":{"baseColor":"#9b8f7b"},
     "door":{"baseColor":"#f2f0e9"},
     "door_frame":{"baseColor":"#dedbd2"},
