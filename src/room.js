@@ -25,7 +25,11 @@ async function loadMaterial(materialConfig, options = {}) {
   return new THREE.MeshStandardMaterial({
     color: materialConfig.baseColor,
     map,
-    side: options.doubleSided ? THREE.DoubleSide : THREE.FrontSide
+    side: options.doubleSided ? THREE.DoubleSide : THREE.FrontSide,
+    emissive: materialConfig.emissiveColor ?? '#000000',
+    emissiveIntensity: materialConfig.emissiveIntensity ?? 0,
+    roughness: materialConfig.roughness ?? 1,
+    metalness: materialConfig.metalness ?? 0
   });
 }
 
