@@ -45,6 +45,29 @@ async function addConfiguredItem(scene, item, materials) {
   scene.add(mesh);
 }
 
+function addTextSign(scene, sign) {
+  if (sign.enabled === false) return;
+  const canvas = document.createElement('canvas');
+  canvas.width = 1024;
+  canvas.height = 384;
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = sign.backgroundColor ?? '#16834a';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = sign.textColor ?? '#ffffff';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.font = `700 ${sign.fontSize ?? 190}px Arial, Helvetica, sans-serif`;
+  ctx.fillText(sign.text ?? '', canvas.width / 2, canvas.height / 2 + 5);
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  const material = new THREE.MeshBasicMaterial({ map: texture, side: THREE.DoubleSide });
+  const mesh = new THREE.Mesh(new THREE.PlaneGeometry(...sign.size), material);
+  mesh.name = sign.id;
+  mesh.position.set(...sign.position);
+  mesh.rotation.set(...(sign.rotation ?? [0, 0, 0]));
+  scene.add(mesh);
+}
+
 function apertureCentreX(def, roomWidth) {
   const sideMargin = 0.55;
   if (def.aperturePosition === 'left') return -roomWidth / 2 + sideMargin + def.apertureWidth / 2;
@@ -93,8 +116,6 @@ async function addTraversalPlane(scene, def, roomConfig, materials, colliders) {
 
   block('left', leftEdge + leftWidth / 2, height / 2, leftWidth, height);
   block('right', apertureRight + rightWidth / 2, height / 2, rightWidth, height);
-  // The lintel is above the player's head. It must remain visible but must not
-  // participate in the 2D floor-plan collision system, or it blocks the doorway.
   block('top', x, def.apertureHeight + topHeight / 2, def.apertureWidth, topHeight, false);
 }
 
@@ -118,5 +139,6 @@ export async function buildRoom(scene, roomConfig, skinConfig, contentConfig) {
   for (const plane of roomConfig.planes ?? []) await addTraversalPlane(scene, plane, roomConfig, materials, planeColliders);
   skinConfig.lighting.forEach((light) => addLight(scene, light));
   for (const object of contentConfig.objects ?? []) await addConfiguredItem(scene, object, materials);
+  for (const sign of contentConfig.signs ?? []) addTextSign(scene, sign);
   return { width, depth, height, planeColliders };
 }
