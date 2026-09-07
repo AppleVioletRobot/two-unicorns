@@ -21,7 +21,7 @@
     {"id":"plane-02","z":0.0,"aperturePosition":"right","apertureWidth":2.2,"apertureHeight":2.55,"thickness":0.24,"faceMaterial":"plane_face","edgeMaterial":"plane_edge"},
     {"id":"plane-03","z":-2.5,"aperturePosition":"middle","apertureWidth":2.2,"apertureHeight":2.55,"thickness":0.24,"faceMaterial":"plane_face","edgeMaterial":"plane_edge"}
   ],
-  "player":{"start":[0,1.65,4.65],"lookAt":[0,1.65,6],"speed":2.4,"turnSpeed":1.5,"collisionMargin":0.35},
+  "player":{"start":[0,1.65,3.15],"lookAt":[0,1.65,6],"speed":2.4,"turnSpeed":1.5,"collisionMargin":0.35},
   "camera":{"fov":52,"near":0.1,"far":100},
   "renderer":{"antialias":true,"maxPixelRatio":2,"maxDelta":0.05}
 }
