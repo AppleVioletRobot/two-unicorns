@@ -28,10 +28,16 @@ function apertureCentreX(def, roomWidth) {
   return 0;
 }
 
+function makeMaterial(materials, id) {
+  const config = materials[id];
+  if (!config) throw new Error(`Unknown material: ${id}`);
+  return new THREE.MeshStandardMaterial({ color: config.baseColor });
+}
+
 function addTraversalPlane(scene, def, roomConfig, materials, colliders) {
   const width = roomConfig.dimensions.width;
   const height = roomConfig.dimensions.height;
-  const thickness = def.thickness ?? 0.14;
+  const thickness = def.thickness ?? 0.24;
   const x = apertureCentreX(def, width);
   const leftEdge = -width / 2;
   const rightEdge = width / 2;
@@ -40,12 +46,13 @@ function addTraversalPlane(scene, def, roomConfig, materials, colliders) {
   const leftWidth = apertureLeft - leftEdge;
   const rightWidth = rightEdge - apertureRight;
   const topHeight = height - def.apertureHeight;
-  const materialConfig = materials[def.material];
-  const material = new THREE.MeshStandardMaterial({ color: materialConfig.baseColor });
+  const faceMaterial = makeMaterial(materials, def.faceMaterial ?? def.material);
+  const edgeMaterial = makeMaterial(materials, def.edgeMaterial ?? def.faceMaterial ?? def.material);
+  const boxMaterials = [edgeMaterial, edgeMaterial, edgeMaterial, edgeMaterial, faceMaterial, faceMaterial];
 
   function block(id, blockX, blockY, blockWidth, blockHeight) {
     if (blockWidth <= 0 || blockHeight <= 0) return;
-    const mesh = new THREE.Mesh(new THREE.BoxGeometry(blockWidth, blockHeight, thickness), material);
+    const mesh = new THREE.Mesh(new THREE.BoxGeometry(blockWidth, blockHeight, thickness), boxMaterials);
     mesh.name = `${def.id}-${id}`;
     mesh.position.set(blockX, blockY, def.z);
     scene.add(mesh);
