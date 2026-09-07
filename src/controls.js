@@ -34,8 +34,8 @@ export function createControls(camera, roomBounds, playerConfig) {
 
     if (keys.has('KeyW') || keys.has('ArrowUp')) forward += 1;
     if (keys.has('KeyS') || keys.has('ArrowDown')) forward -= 1;
-    if (keys.has('KeyA') || keys.has('ArrowLeft')) turn += 1;
-    if (keys.has('KeyD') || keys.has('ArrowRight')) turn -= 1;
+    if (keys.has('KeyA') || keys.has('ArrowLeft')) turn -= 1;
+    if (keys.has('KeyD') || keys.has('ArrowRight')) turn += 1;
 
     camera.rotation.y += turn * turnSpeed * delta;
 
