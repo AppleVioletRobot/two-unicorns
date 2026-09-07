@@ -5,7 +5,16 @@
     {"id":"ceiling","type":"plane","size":[8,10],"position":[0,3.4,0],"rotation":[1.5707963268,0,0],"material":"ceiling","doubleSided":true},
     {"id":"back-wall","type":"plane","size":[8,3.4],"position":[0,1.7,-5],"rotation":[0,0,0],"material":"walls"},
     {"id":"left-wall","type":"plane","size":[10,3.4],"position":[-4,1.7,0],"rotation":[0,1.5707963268,0],"material":"walls"},
-    {"id":"right-wall","type":"plane","size":[10,3.4],"position":[4,1.7,0],"rotation":[0,-1.5707963268,0],"material":"walls"}
+    {"id":"right-wall","type":"plane","size":[10,3.4],"position":[4,1.7,0],"rotation":[0,-1.5707963268,0],"material":"walls"},
+    {"id":"front-wall-left","type":"plane","size":[3.3,3.4],"position":[-2.35,1.7,5],"rotation":[0,3.1415926536,0],"material":"walls"},
+    {"id":"front-wall-right","type":"plane","size":[3.3,3.4],"position":[2.35,1.7,5],"rotation":[0,3.1415926536,0],"material":"walls"},
+    {"id":"front-wall-over-door","type":"plane","size":[1.4,1.1],"position":[0,2.85,5],"rotation":[0,3.1415926536,0],"material":"walls"},
+    {"id":"door-01","type":"box","enabled":true,"size":[1.26,2.26,0.07],"position":[0,1.13,4.935],"rotation":[0,0,0],"material":"door"},
+    {"id":"door-frame-left","type":"box","size":[0.12,2.28,0.09],"position":[-0.69,1.14,4.925],"rotation":[0,0,0],"material":"door_frame"},
+    {"id":"door-frame-right","type":"box","size":[0.12,2.28,0.09],"position":[0.69,1.14,4.925],"rotation":[0,0,0],"material":"door_frame"},
+    {"id":"door-frame-top","type":"box","size":[1.50,0.12,0.09],"position":[0,2.34,4.925],"rotation":[0,0,0],"material":"door_frame"},
+    {"id":"door-handle-plate","type":"box","size":[0.05,0.18,0.025],"position":[0.47,1.05,4.885],"rotation":[0,0,0],"material":"door_handle"},
+    {"id":"door-handle-lever","type":"box","size":[0.16,0.035,0.035],"position":[0.41,1.07,4.865],"rotation":[0,0,0],"material":"door_handle"}
   ],
   "player":{"start":[0,1.65,4.2],"lookAt":[0,1.65,-5],"speed":2.4,"turnSpeed":1.5,"collisionMargin":0.35},
   "camera":{"fov":52,"near":0.1,"far":100},
