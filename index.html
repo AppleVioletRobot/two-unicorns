@@ -3,24 +3,21 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Two Unicorns Talking — Spatial Test</title>
-    <script type="module" src="/src/main.js"></script>
+    <meta name="description" content="Two Unicorns Talking: enterable testimony spatial prototype." />
+    <title>Two Unicorns Talking</title>
   </head>
   <body>
     <div id="app">
-      <div id="scene"></div>
-      <div class="hud">
-        <div class="status">
-          <strong>Two Unicorns Talking — v0.1</strong>
-          <span id="positionLabel">Entrance</span>
+      <div id="overlay" class="overlay">
+        <div class="overlay-card">
+          <p class="eyebrow">Two Unicorns Talking</p>
+          <h1>Enter the room</h1>
+          <p>Use ↑ / W to move forward, ↓ / S to move backward, ← / A to turn left, and → / D to turn right. The mouse does not control the camera.</p>
+          <button id="enter-button" type="button">Enter room</button>
         </div>
-        <div class="controls" aria-label="Movement controls">
-          <button id="backButton" type="button">← Back</button>
-          <button id="turnButton" type="button">Turn around</button>
-          <button id="forwardButton" type="button">Forward →</button>
-        </div>
-        <p class="note">Ugly on purpose. Test spacing, scale, apertures and the return journey.</p>
       </div>
+      <div id="hud" class="hud" aria-live="polite">Two Unicorns Talking</div>
     </div>
+    <script type="module" src="/src/main.js"></script>
   </body>
 </html>

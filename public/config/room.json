@@ -1,0 +1,13 @@
+{
+  "dimensions": {"width":8,"depth":10,"height":3.4},
+  "architecture": [
+    {"id":"floor","type":"plane","size":[8,10],"position":[0,0,0],"rotation":[-1.5707963268,0,0],"material":"floor"},
+    {"id":"ceiling","type":"plane","size":[8,10],"position":[0,3.4,0],"rotation":[1.5707963268,0,0],"material":"ceiling","doubleSided":true},
+    {"id":"back-wall","type":"plane","size":[8,3.4],"position":[0,1.7,-5],"rotation":[0,0,0],"material":"walls"},
+    {"id":"left-wall","type":"plane","size":[10,3.4],"position":[-4,1.7,0],"rotation":[0,1.5707963268,0],"material":"walls"},
+    {"id":"right-wall","type":"plane","size":[10,3.4],"position":[4,1.7,0],"rotation":[0,-1.5707963268,0],"material":"walls"}
+  ],
+  "player":{"start":[0,1.65,4.2],"lookAt":[0,1.65,-5],"speed":2.4,"turnSpeed":1.5,"collisionMargin":0.35},
+  "camera":{"fov":52,"near":0.1,"far":100},
+  "renderer":{"antialias":true,"maxPixelRatio":2,"maxDelta":0.05}
+}

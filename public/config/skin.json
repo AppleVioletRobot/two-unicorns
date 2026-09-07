@@ -1,0 +1,13 @@
+{
+  "background":"#ececec",
+  "materials": {
+    "walls":{"baseColor":"#913142"},
+    "floor":{"baseColor":"#d8c7ac"},
+    "ceiling":{"baseColor":"#f7f7f4"},
+    "plane":{"baseColor":"#efefef"}
+  },
+  "lighting": [
+    {"type":"ambient","color":"#ffffff","intensity":1.4},
+    {"type":"directional","color":"#ffffff","intensity":1.2,"position":[2,2.9,1]}
+  ]
+}
