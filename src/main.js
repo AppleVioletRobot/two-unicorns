@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import './styles.css';
 import { buildRoom } from './room.js';
 import { createControls } from './controls.js';
+import { addInterpretationPanels } from './interpretation.js';
 
 async function loadJson(path) {
   const separator = path.includes('?') ? '&' : '?';
@@ -68,6 +69,7 @@ async function start() {
   document.querySelector('#app').prepend(renderer.domElement);
 
   const roomBounds = await buildRoom(scene, roomConfig, skinConfig, contentConfig);
+  addInterpretationPanels(scene, contentConfig);
   const { update } = createControls(camera, roomBounds, roomConfig.player);
 
   enterButton.textContent = 'Enter Room';
