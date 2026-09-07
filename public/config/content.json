@@ -14,12 +14,14 @@
     {
       "id": "explore-instruction",
       "text": "Turn around and explore",
-      "size": [1.05, 0.28],
+      "size": [1.08, 0.22],
       "position": [0, 1.55, 5.925],
       "rotation": [0, 3.1415926536, 0],
-      "backgroundColor": "#f2f0e9",
-      "textColor": "#222222",
-      "fontSize": 82
+      "transparent": true,
+      "textColor": "#262626",
+      "fontSize": 66,
+      "fontWeight": 400,
+      "fontFamily": "Helvetica Neue, Helvetica, Arial, sans-serif"
     }
   ],
   "planeGalleries": [
@@ -49,11 +51,7 @@
         "https://raw.githubusercontent.com/AppleVioletRobot/blank-room/main/public/images/polaroids/polaroid_013.webp",
         "https://raw.githubusercontent.com/AppleVioletRobot/blank-room/main/public/images/polaroids/polaroid_014.webp",
         "https://raw.githubusercontent.com/AppleVioletRobot/blank-room/main/public/images/polaroids/polaroid_015.webp",
-        "https://raw.githubusercontent.com/AppleVioletRobot/blank-room/main/public/images/polaroids/polaroid_016.webp",
-        "https://raw.githubusercontent.com/AppleVioletRobot/blank-room/main/public/images/polaroids/polaroid_017.webp",
-        "https://raw.githubusercontent.com/AppleVioletRobot/blank-room/main/public/images/polaroids/polaroid_018.webp",
-        "https://raw.githubusercontent.com/AppleVioletRobot/blank-room/main/public/images/polaroids/polaroid_019.webp",
-        "https://raw.githubusercontent.com/AppleVioletRobot/blank-room/main/public/images/polaroids/polaroid_020.webp"
+        "https://raw.githubusercontent.com/AppleVioletRobot/blank-room/main/public/images/polaroids/polaroid_016.webp"
       ]
     }
   ],
@@ -61,13 +59,18 @@
     {
       "id": "staph-polaroids-walls",
       "enabled": true,
-      "walls": ["left-wall", "right-wall", "back-wall"],
+      "walls": ["front-wall-left", "front-wall-right", "left-wall", "right-wall", "back-wall"],
       "itemWidth": 1.25,
       "aspectRatio": [472, 536],
       "gap": 0.28,
       "centreY": 1.65,
       "normalOffset": 0.014,
+      "planeClearance": 0.14,
       "images": [
+        "https://raw.githubusercontent.com/AppleVioletRobot/blank-room/main/public/images/polaroids/polaroid_017.webp",
+        "https://raw.githubusercontent.com/AppleVioletRobot/blank-room/main/public/images/polaroids/polaroid_018.webp",
+        "https://raw.githubusercontent.com/AppleVioletRobot/blank-room/main/public/images/polaroids/polaroid_019.webp",
+        "https://raw.githubusercontent.com/AppleVioletRobot/blank-room/main/public/images/polaroids/polaroid_020.webp",
         "https://raw.githubusercontent.com/AppleVioletRobot/blank-room/main/public/images/polaroids/polaroid_021.webp",
         "https://raw.githubusercontent.com/AppleVioletRobot/blank-room/main/public/images/polaroids/polaroid_022.webp",
         "https://raw.githubusercontent.com/AppleVioletRobot/blank-room/main/public/images/polaroids/polaroid_023.webp",
