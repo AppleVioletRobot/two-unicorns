@@ -17,9 +17,9 @@
     {"id":"door-handle-lever","type":"box","size":[0.16,0.035,0.035],"position":[0.41,1.07,4.865],"rotation":[0,0,0],"material":"door_handle"}
   ],
   "planes": [
-    {"id":"plane-01","z":2.0,"aperturePosition":"left","apertureWidth":2.2,"apertureHeight":2.55,"material":"plane"},
-    {"id":"plane-02","z":0.0,"aperturePosition":"right","apertureWidth":2.2,"apertureHeight":2.55,"material":"plane"},
-    {"id":"plane-03","z":-2.0,"aperturePosition":"middle","apertureWidth":2.2,"apertureHeight":2.55,"material":"plane"}
+    {"id":"plane-01","z":2.0,"aperturePosition":"left","apertureWidth":2.2,"apertureHeight":2.55,"thickness":0.24,"faceMaterial":"plane_face","edgeMaterial":"plane_edge"},
+    {"id":"plane-02","z":0.0,"aperturePosition":"right","apertureWidth":2.2,"apertureHeight":2.55,"thickness":0.24,"faceMaterial":"plane_face","edgeMaterial":"plane_edge"},
+    {"id":"plane-03","z":-2.0,"aperturePosition":"middle","apertureWidth":2.2,"apertureHeight":2.55,"thickness":0.24,"faceMaterial":"plane_face","edgeMaterial":"plane_edge"}
   ],
   "player":{"start":[0,1.65,4.2],"lookAt":[0,1.65,-5],"speed":2.4,"turnSpeed":1.5,"collisionMargin":0.35},
   "camera":{"fov":52,"near":0.1,"far":100},
