@@ -142,6 +142,18 @@ function gallerySlotsForPlane(def, roomWidth, gallery) {
   return slots;
 }
 
+async function texturedGalleryMesh(image, itemWidth, itemHeight) {
+  const texture = await textureLoader.loadAsync(image);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  const material = new THREE.MeshBasicMaterial({
+    map: texture,
+    transparent: true,
+    alphaTest: 0.001,
+    side: THREE.FrontSide
+  });
+  return new THREE.Mesh(new THREE.PlaneGeometry(itemWidth, itemHeight), material);
+}
+
 async function addPlaneGallery(scene, gallery, roomConfig) {
   if (gallery.enabled === false) return;
   const planeById = new Map((roomConfig.planes ?? []).map((plane) => [plane.id, plane]));
@@ -164,21 +176,58 @@ async function addPlaneGallery(scene, gallery, roomConfig) {
     for (const side of sides) {
       for (const x of xSlots) {
         if (imageIndex >= images.length) return;
-        const texture = await textureLoader.loadAsync(images[imageIndex]);
-        texture.colorSpace = THREE.SRGBColorSpace;
-        const material = new THREE.MeshBasicMaterial({
-          map: texture,
-          transparent: true,
-          alphaTest: 0.001,
-          side: THREE.FrontSide
-        });
-        const mesh = new THREE.Mesh(new THREE.PlaneGeometry(itemWidth, itemHeight), material);
+        const mesh = await texturedGalleryMesh(images[imageIndex], itemWidth, itemHeight);
         mesh.name = `${gallery.id ?? 'plane-gallery'}-${imageIndex + 1}`;
         mesh.position.set(x, centreY, def.z + (side === 'front' ? halfThickness + normalOffset : -halfThickness - normalOffset));
         mesh.rotation.y = side === 'front' ? 0 : Math.PI;
         scene.add(mesh);
         imageIndex += 1;
       }
+    }
+  }
+}
+
+async function addWallGallery(scene, gallery, roomConfig) {
+  if (gallery.enabled === false) return;
+  const architecture = roomConfig.architecture ?? [];
+  const wallById = new Map(architecture.map((item) => [item.id, item]));
+  const wallIds = gallery.walls ?? [];
+  const images = gallery.images ?? [];
+  const itemWidth = gallery.itemWidth ?? 1.25;
+  const [aspectWidth, aspectHeight] = gallery.aspectRatio ?? [472, 536];
+  const itemHeight = gallery.itemHeight ?? itemWidth * (aspectHeight / aspectWidth);
+  const gap = gallery.gap ?? 0.28;
+  const centreY = gallery.centreY ?? 1.65;
+  const normalOffset = gallery.normalOffset ?? 0.014;
+  let imageIndex = 0;
+
+  for (const wallId of wallIds) {
+    const wall = wallById.get(wallId);
+    if (!wall || wall.type !== 'plane') continue;
+    const wallWidth = wall.size[0];
+    const count = Math.max(0, Math.floor((wallWidth + gap) / (itemWidth + gap)));
+    if (!count) continue;
+    const used = count * itemWidth + (count - 1) * gap;
+    const first = -(used / 2) + itemWidth / 2;
+    const rotation = new THREE.Euler(...wall.rotation);
+    const right = new THREE.Vector3(1, 0, 0).applyEuler(rotation);
+    const normal = new THREE.Vector3(0, 0, 1).applyEuler(rotation);
+    const wallCentre = new THREE.Vector3(...wall.position);
+
+    for (let slot = 0; slot < count; slot += 1) {
+      if (imageIndex >= images.length) return;
+      const offset = first + slot * (itemWidth + gap);
+      const position = wallCentre.clone()
+        .add(right.clone().multiplyScalar(offset))
+        .add(normal.clone().multiplyScalar(normalOffset));
+      position.y = centreY;
+
+      const mesh = await texturedGalleryMesh(images[imageIndex], itemWidth, itemHeight);
+      mesh.name = `${gallery.id ?? 'wall-gallery'}-${imageIndex + 1}`;
+      mesh.position.copy(position);
+      mesh.rotation.set(...wall.rotation);
+      scene.add(mesh);
+      imageIndex += 1;
     }
   }
 }
@@ -205,5 +254,6 @@ export async function buildRoom(scene, roomConfig, skinConfig, contentConfig) {
   for (const object of contentConfig.objects ?? []) await addConfiguredItem(scene, object, materials);
   for (const sign of contentConfig.signs ?? []) addTextSign(scene, sign);
   for (const gallery of contentConfig.planeGalleries ?? []) await addPlaneGallery(scene, gallery, roomConfig);
+  for (const gallery of contentConfig.wallGalleries ?? []) await addWallGallery(scene, gallery, roomConfig);
   return { width, depth, height, planeColliders };
 }
