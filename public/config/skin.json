@@ -4,7 +4,10 @@
     "walls":{"baseColor":"#913142"},
     "floor":{"baseColor":"#d8c7ac"},
     "ceiling":{"baseColor":"#f7f7f4"},
-    "plane":{"baseColor":"#efefef"}
+    "plane":{"baseColor":"#efefef"},
+    "door":{"baseColor":"#f2f0e9"},
+    "door_frame":{"baseColor":"#dedbd2"},
+    "door_handle":{"baseColor":"#6f6f6a"}
   },
   "lighting": [
     {"type":"ambient","color":"#ffffff","intensity":1.4},
