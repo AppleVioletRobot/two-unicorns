@@ -70,24 +70,28 @@ async function addTraversalPlane(scene, def, roomConfig, materials, colliders) {
   const edgeMaterial = await makeMaterial(materials, def.edgeMaterial ?? def.faceMaterial ?? def.material);
   const boxMaterials = [edgeMaterial, edgeMaterial, edgeMaterial, edgeMaterial, faceMaterial, faceMaterial];
 
-  function block(id, blockX, blockY, blockWidth, blockHeight) {
+  function block(id, blockX, blockY, blockWidth, blockHeight, collides = true) {
     if (blockWidth <= 0 || blockHeight <= 0) return;
     const mesh = new THREE.Mesh(new THREE.BoxGeometry(blockWidth, blockHeight, thickness), boxMaterials);
     mesh.name = `${def.id}-${id}`;
     mesh.position.set(blockX, blockY, def.z);
     scene.add(mesh);
-    colliders.push({
-      id: `${def.id}-${id}`,
-      minX: blockX - blockWidth / 2,
-      maxX: blockX + blockWidth / 2,
-      minZ: def.z - thickness / 2,
-      maxZ: def.z + thickness / 2
-    });
+    if (collides) {
+      colliders.push({
+        id: `${def.id}-${id}`,
+        minX: blockX - blockWidth / 2,
+        maxX: blockX + blockWidth / 2,
+        minZ: def.z - thickness / 2,
+        maxZ: def.z + thickness / 2
+      });
+    }
   }
 
   block('left', leftEdge + leftWidth / 2, height / 2, leftWidth, height);
   block('right', apertureRight + rightWidth / 2, height / 2, rightWidth, height);
-  block('top', x, def.apertureHeight + topHeight / 2, def.apertureWidth, topHeight);
+  // The lintel is above the player's head. It must remain visible but must not
+  // participate in the 2D floor-plan collision system, or it blocks the doorway.
+  block('top', x, def.apertureHeight + topHeight / 2, def.apertureWidth, topHeight, false);
 }
 
 function addLight(scene, lightConfig) {
