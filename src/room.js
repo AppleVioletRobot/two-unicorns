@@ -123,10 +123,7 @@ function gallerySlotsForPlane(def, roomWidth, gallery) {
   const apertureX = apertureCentreX(def, roomWidth);
   const apertureLeft = apertureX - def.apertureWidth / 2;
   const apertureRight = apertureX + def.apertureWidth / 2;
-  const segments = [
-    [-roomWidth / 2, apertureLeft],
-    [apertureRight, roomWidth / 2]
-  ];
+  const segments = [[-roomWidth / 2, apertureLeft], [apertureRight, roomWidth / 2]];
   const itemWidth = gallery.itemWidth ?? 0.56;
   const gap = gallery.gap ?? 0.12;
   const slots = [];
@@ -145,12 +142,7 @@ function gallerySlotsForPlane(def, roomWidth, gallery) {
 async function texturedGalleryMesh(image, itemWidth, itemHeight) {
   const texture = await textureLoader.loadAsync(image);
   texture.colorSpace = THREE.SRGBColorSpace;
-  const material = new THREE.MeshBasicMaterial({
-    map: texture,
-    transparent: true,
-    alphaTest: 0.001,
-    side: THREE.FrontSide
-  });
+  const material = new THREE.MeshBasicMaterial({ map: texture, transparent: true, alphaTest: 0.001, side: THREE.FrontSide });
   return new THREE.Mesh(new THREE.PlaneGeometry(itemWidth, itemHeight), material);
 }
 
@@ -187,6 +179,54 @@ async function addPlaneGallery(scene, gallery, roomConfig) {
   }
 }
 
+function wallSegmentsAvoidingPlanes(wall, roomConfig, gallery) {
+  const wallWidth = wall.size[0];
+  const halfWidth = wallWidth / 2;
+  const rotation = new THREE.Euler(...wall.rotation);
+  const right = new THREE.Vector3(1, 0, 0).applyEuler(rotation);
+
+  // Traversal planes run across X at fixed Z, so they only divide walls whose
+  // horizontal axis runs along Z (the left and right outer walls).
+  if (Math.abs(right.z) < 0.9) return [[-halfWidth, halfWidth]];
+
+  const clearance = gallery.planeClearance ?? 0.12;
+  const wallCentre = new THREE.Vector3(...wall.position);
+  const cuts = [];
+
+  for (const plane of roomConfig.planes ?? []) {
+    const localOffset = (plane.z - wallCentre.z) / right.z;
+    if (localOffset <= -halfWidth || localOffset >= halfWidth) continue;
+    const halfCut = (plane.thickness ?? 0.24) / 2 + clearance;
+    cuts.push([localOffset - halfCut, localOffset + halfCut]);
+  }
+
+  cuts.sort((a, b) => a[0] - b[0]);
+  const segments = [];
+  let cursor = -halfWidth;
+  for (const [cutStart, cutEnd] of cuts) {
+    if (cutStart > cursor) segments.push([cursor, Math.min(cutStart, halfWidth)]);
+    cursor = Math.max(cursor, cutEnd);
+  }
+  if (cursor < halfWidth) segments.push([cursor, halfWidth]);
+  return segments.filter(([start, end]) => end > start);
+}
+
+function gallerySlotsForWall(wall, roomConfig, gallery) {
+  const itemWidth = gallery.itemWidth ?? 1.25;
+  const gap = gallery.gap ?? 0.28;
+  const slots = [];
+
+  for (const [start, end] of wallSegmentsAvoidingPlanes(wall, roomConfig, gallery)) {
+    const width = end - start;
+    const count = Math.max(0, Math.floor((width + gap) / (itemWidth + gap)));
+    if (!count) continue;
+    const used = count * itemWidth + (count - 1) * gap;
+    const first = start + (width - used) / 2 + itemWidth / 2;
+    for (let slot = 0; slot < count; slot += 1) slots.push(first + slot * (itemWidth + gap));
+  }
+  return slots;
+}
+
 async function addWallGallery(scene, gallery, roomConfig) {
   if (gallery.enabled === false) return;
   const architecture = roomConfig.architecture ?? [];
@@ -196,7 +236,6 @@ async function addWallGallery(scene, gallery, roomConfig) {
   const itemWidth = gallery.itemWidth ?? 1.25;
   const [aspectWidth, aspectHeight] = gallery.aspectRatio ?? [472, 536];
   const itemHeight = gallery.itemHeight ?? itemWidth * (aspectHeight / aspectWidth);
-  const gap = gallery.gap ?? 0.28;
   const centreY = gallery.centreY ?? 1.65;
   const normalOffset = gallery.normalOffset ?? 0.014;
   let imageIndex = 0;
@@ -204,19 +243,14 @@ async function addWallGallery(scene, gallery, roomConfig) {
   for (const wallId of wallIds) {
     const wall = wallById.get(wallId);
     if (!wall || wall.type !== 'plane') continue;
-    const wallWidth = wall.size[0];
-    const count = Math.max(0, Math.floor((wallWidth + gap) / (itemWidth + gap)));
-    if (!count) continue;
-    const used = count * itemWidth + (count - 1) * gap;
-    const first = -(used / 2) + itemWidth / 2;
+    const offsets = gallerySlotsForWall(wall, roomConfig, gallery);
     const rotation = new THREE.Euler(...wall.rotation);
     const right = new THREE.Vector3(1, 0, 0).applyEuler(rotation);
     const normal = new THREE.Vector3(0, 0, 1).applyEuler(rotation);
     const wallCentre = new THREE.Vector3(...wall.position);
 
-    for (let slot = 0; slot < count; slot += 1) {
+    for (const offset of offsets) {
       if (imageIndex >= images.length) return;
-      const offset = first + slot * (itemWidth + gap);
       const position = wallCentre.clone()
         .add(right.clone().multiplyScalar(offset))
         .add(normal.clone().multiplyScalar(normalOffset));
