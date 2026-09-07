@@ -4,8 +4,8 @@
     "walls":{"baseColor":"#913142"},
     "floor":{"baseColor":"#ffffff","texture":"https://raw.githubusercontent.com/AppleVioletRobot/blank-room/main/public/images/floor_wood_01.webp","textureRepeat":[4,7.2],"textureRotation":0},
     "ceiling":{"baseColor":"#f7f7f4"},
-    "plane_face":{"baseColor":"#efefef"},
-    "plane_edge":{"baseColor":"#c8c8c8"},
+    "plane_face":{"baseColor":"#f3eee2"},
+    "plane_edge":{"baseColor":"#aaa294"},
     "door":{"baseColor":"#f2f0e9"},
     "door_frame":{"baseColor":"#dedbd2"},
     "door_handle":{"baseColor":"#6f6f6a"}
